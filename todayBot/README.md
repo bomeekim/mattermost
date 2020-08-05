@@ -274,6 +274,27 @@ function birthDayEvents(calendarId) {
 
 ![MmGoogleCalendar-6](https://user-images.githubusercontent.com/11264094/89151299-a26e3480-d59b-11ea-9882-de162192edab.png)
 
+#### 오늘의 신규 입사자
+
+센터 내 신규 입사자가 있을 때 입사 하루 전날과 당일에 알려주는 함수입니다. 현재 날짜 기준으로 다음 날 입사자가 있는 경우 그리고 현재 날짜가 입사 당일날인 경우 채널로 메시지를 전송합니다.
+
+```javascript
+function newCrewEvents(calendarId) {
+  let calendar = CalendarApp.getCalendarById(calendarId);
+  let today = new Date();
+  let tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  
+  let theDay = calendar.getEventsForDay(today, { search: '입사' });
+  let beforeJoinDay = calendar.getEventsForDay(tomorrow, { search: '입사' });
+ 
+  .... 생략
+}
+```
+
+![image](https://user-images.githubusercontent.com/11264094/89378362-95357f00-d72e-11ea-9fad-caeaf98b9e7b.png)
+
+
 #### [소스코드 전체 보기](https://github.com/bomeekim/mattermost/blob/master/todayBot/index.js)
 
 ```
@@ -313,7 +334,11 @@ README.md 파일에서 설명하지 않은 부분이 있을 수 있으니 전체
 
 ### TODO
 
-- [ ] 토,일 제외하기
+- [x] 토,일 제외하기
 - [ ] API response error 처리하기
 - [ ] 다양한 인삿말/footer 문구 랜덤으로 보여주기
-- [ ] 다른 봇들도 만들기
+- [x] 신규입사자 이벤트 봇들도 만들기
+- [ ] 검색봇 만들기
+- [ ] 위키피드 알람봇 만들기
+- [ ] 오늘의 일정에 날씨/대기질 정보도 추가하기
+- [ ] 팀 계정으로 날라돈 메일 알람 봇 만들기
