@@ -1,8 +1,14 @@
 var calendarId = ""; // Google Calendar ID를 넣어주세요
 var webhookUrl = ""; // Mattermost WebHook ID를 넣어주세요
+var week = new Array('일', '월', '화', '수', '목', '금', '토');
 
 function myFunction() {
   Logger.log("\n Event Notification Begin \n");
+  
+  // 토,일 제외
+  let today = new Date();
+  
+  if (today.getDay() === 0 || today.getDay() === 1) return;
   
   // 오늘 일정 알람
   todayEvents(calendarId);
@@ -13,6 +19,9 @@ function myFunction() {
   // 오늘의 생일 알람
   birthDayEvents(calendarId);
   
+  // 신규 입사자 알람
+  newCrewEvents(calendarId);
+  
   Logger.log("\n Finished! \n");
 }
 
@@ -20,6 +29,8 @@ function todayEvents(calendarId) {
   let calendar = CalendarApp.getCalendarById(calendarId);
   let today = new Date();
   let todayText = Utilities.formatDate(today,"GMT+0900","YYYY년 MM월 dd일");
+  todayText += ` ${week[today.getDay()]}요일`;
+  
   let events = calendar.getEventsForDay(today);
     
   let icon = "https://img.icons8.com/color/420/iron-man.png";
@@ -44,7 +55,7 @@ function todayEvents(calendarId) {
         && title.indexOf('오전반차') === -1
         && title.indexOf('오후반차') === -1
         && title.indexOf('생일') === -1) {
-         msg += `|${startTime} ~ ${endTime}|${title}|${location}|\n`;
+         msg += `|${startTime === '00시 00분' ? '' : startTime + ' ~ '} ${endTime === '00시 00분' ? '' : endTime}|${title}|${location}|\n`;
       }
     }
   }
@@ -142,6 +153,65 @@ function birthDayEvents(calendarId) {
   
   // API 호출
   postMmost('', icon, 'BIRTHDAY', attachments);
+}
+
+function newCrewEvents(calendarId) {
+  let calendar = CalendarApp.getCalendarById(calendarId);
+  let today = new Date();
+  let tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  
+  let theDay = calendar.getEventsForDay(today, { search: '입사' });
+  let beforeJoinDay = calendar.getEventsForDay(tomorrow, { search: '입사' });
+ 
+  let icon = "https://img.icons8.com/color/420/rowing-2.png";
+  let attachments = '';  
+  
+  // 내일 입사하는 사람이 없는 경우
+  if (beforeJoinDay.length < 1) return;
+  
+  // 입사하는 사람이 있는 경우
+  // case1 당일
+  if (!!theDay) {
+    let text = '#### [D-DAY] 오늘은 신규 크루 ';
+    text += getText(theDay, "[입사] ");
+    text += '님의 입사 첫날입니다.\n###### :tada: 입사를 진심으로 축하드립니다.:tada: @here 다들 격하게 환영해주세요!! :clap:';
+    
+    let img = "https://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif";
+    
+    attachments = [
+      {
+        "color": "#f6da6e",
+        "text": text,
+        "image_url": img
+      }
+    ];
+    
+    // API 호출
+    postMmost('', icon, 'WELCOME', attachments);
+  }  
+  
+  // case2 하루 전
+  if (!!beforeJoinDay) {
+    let text = '#### [D-1] 오늘은 신규 크루 ';
+    text += getText(beforeJoinDay, "[입사] ");
+    text += '님의 입사 하루 전날입니다.\n###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
+    text += '1. :memo: 에이프릴 자리에서 에비츄 포스트잇을 받아간다.\n';
+    text += '2. :thinking: 멘토로 선발되기 위한 환영 메시지를 고민한다.\n';
+    text += '3. :clock12: 점심시간 전까지 작성해 신규 크루 자리에 붙여둔다.\n';
+    
+    attachments = [
+      {
+        "color": "#ff754c",
+        "text": text,
+        "footer": '환영 문화 및 쪽지와 관련된 문의는 에이프릴(@april)에게 해주세요.',
+        "footer_icon": "https://img.icons8.com/color/420/communication.png"
+      }
+    ];   
+    
+    // API 호출
+    postMmost('', icon, 'WELCOME', attachments);
+  } 
 }
 
 /**
