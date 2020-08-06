@@ -1,6 +1,6 @@
-var calendarId = ""; // Google Calendar ID를 넣어주세요
-var webhookUrl = ""; // Mattermost WebHook ID를 넣어주세요
-var week = new Array('일', '월', '화', '수', '목', '금', '토');
+const calendarId = ""; // Google Calendar ID를 넣어주세요
+const webhookUrl = ""; // Mattermost WebHook ID를 넣어주세요
+const week = ['일', '월', '화', '수', '목', '금', '토'];
 
 function myFunction() {
   Logger.log("\n Event Notification Begin \n");
@@ -8,8 +8,8 @@ function myFunction() {
   // 토,일 제외
   let today = new Date();
   
-  if (today.getDay() === 0 || today.getDay() === 1) return;
-  
+  if (today.getDay() === week.indexOf('토') || today.getDay() === week.indexOf('일')) return;
+
   // 오늘 일정 알람
   todayEvents(calendarId);
   
@@ -160,19 +160,24 @@ function newCrewEvents(calendarId) {
   let today = new Date();
   let tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
+  let nextMonday = '';
+  let beforeJoinDayMonday = [];
   
   let theDay = calendar.getEventsForDay(today, { search: '입사' });
   let beforeJoinDay = calendar.getEventsForDay(tomorrow, { search: '입사' });
- 
+  
+  if (today.getDay() === week.indexOf('금')) {
+    nextMonday = new Date();
+    nextMonday.setDate(today.getDate() + 3);
+    beforeJoinDayMonday = calendar.getEventsForDay(nextMonday, { search: '입사' });
+  }
+  
   let icon = "https://img.icons8.com/color/420/rowing-2.png";
   let attachments = '';  
   
-  // 내일 입사하는 사람이 없는 경우
-  if (beforeJoinDay.length < 1) return;
-  
   // 입사하는 사람이 있는 경우
   // case1 당일
-  if (!!theDay) {
+  if (!!theDay && theDay.length > 0) {
     let text = '#### [D-DAY] 오늘은 신규 크루 ';
     text += getText(theDay, "[입사] ");
     text += '님의 입사 첫날입니다.\n###### :tada: 입사를 진심으로 축하드립니다.:tada: @here 다들 격하게 환영해주세요!! :clap:';
@@ -189,13 +194,13 @@ function newCrewEvents(calendarId) {
     
     // API 호출
     postMmost('', icon, 'WELCOME', attachments);
-  }  
+  } 
   
-  // case2 하루 전
-  if (!!beforeJoinDay) {
+  if (!!beforeJoinDay && beforeJoinDay.length > 0) {
     let text = '#### [D-1] 오늘은 신규 크루 ';
     text += getText(beforeJoinDay, "[입사] ");
-    text += '님의 입사 하루 전날입니다.\n###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
+    text += '님의 입사 하루 전날입니다.\n';
+    text += '###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
     text += '1. :memo: 에이프릴 자리에서 에비츄 포스트잇을 받아간다.\n';
     text += '2. :thinking: 멘토로 선발되기 위한 환영 메시지를 고민한다.\n';
     text += '3. :clock12: 점심시간 전까지 작성해 신규 크루 자리에 붙여둔다.\n';
@@ -207,11 +212,37 @@ function newCrewEvents(calendarId) {
         "footer": '환영 문화 및 쪽지와 관련된 문의는 에이프릴(@april)에게 해주세요.',
         "footer_icon": "https://img.icons8.com/color/420/communication.png"
       }
-    ];   
+    ];
+    
+    Logger.log(attachments);
     
     // API 호출
     postMmost('', icon, 'WELCOME', attachments);
-  } 
+  }
+  
+  if (!!beforeJoinDayMonday && beforeJoinDayMonday.length > 0) {
+    let text = '#### [D-3] 다음주 월요일 신규 크루 ';
+    text += getText(beforeJoinDayMonday, "[입사] ");
+    text += '님이 입사할 예정입니다. \n';
+    text += '###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
+    text += '1. :memo: 에이프릴 자리에서 에비츄 포스트잇을 받아간다.\n';
+    text += '2. :thinking: 멘토로 선발되기 위한 환영 메시지를 고민한다.\n';
+    text += '3. :clock12: 점심시간 전까지 작성해 신규 크루 자리에 붙여둔다.\n';
+    
+    attachments = [
+      {
+        "color": "#ff754c",
+        "text": text,
+        "footer": '환영 문화 및 쪽지와 관련된 문의는 에이프릴(@april)에게 해주세요.',
+        "footer_icon": "https://img.icons8.com/color/420/communication.png"
+      }
+    ];
+    
+    Logger.log(attachments);
+    
+    // API 호출
+    postMmost('', icon, 'WELCOME', attachments);
+  }
 }
 
 /**
