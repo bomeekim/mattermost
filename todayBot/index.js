@@ -38,7 +38,7 @@ function todayEvents(calendarId) {
   let msg = '';
 
   // 이벤트가 없을 때  
-  if (events.length < 1) {
+  if (!events || events.length < 1) {
     text += '오늘은 특별한 일정이 없네요 :slightly_smiling_face:';
   } else {
     text += '오늘의 일정을 간략하게 알려드릴게요.'
@@ -165,7 +165,7 @@ function newCrewEvents(calendarId) {
   
   let theDay = calendar.getEventsForDay(today, { search: '입사' });
   let beforeJoinDay = calendar.getEventsForDay(tomorrow, { search: '입사' });
-  
+
   if (today.getDay() === week.indexOf('금')) {
     nextMonday = new Date();
     nextMonday.setDate(today.getDate() + 3);
@@ -197,8 +197,12 @@ function newCrewEvents(calendarId) {
   } 
   
   if (!!beforeJoinDay && beforeJoinDay.length > 0) {
+    let list = getText(beforeJoinDay, "[입사] ");
+    
+    if (!list) return;
+    
     let text = '#### [D-1] 오늘은 신규 크루 ';
-    text += getText(beforeJoinDay, "[입사] ");
+    text += list;
     text += '님의 입사 하루 전날입니다.\n';
     text += '###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
     text += '1. :memo: 에이프릴 자리에서 에비츄 포스트잇을 받아간다.\n';
@@ -214,15 +218,17 @@ function newCrewEvents(calendarId) {
       }
     ];
     
-    Logger.log(attachments);
-    
     // API 호출
     postMmost('', icon, 'WELCOME', attachments);
   }
   
   if (!!beforeJoinDayMonday && beforeJoinDayMonday.length > 0) {
+    let list = getText(beforeJoinDayMonday, "[입사] ");
+    
+    if (!list) return;
+    
     let text = '#### [D-3] 다음주 월요일 신규 크루 ';
-    text += getText(beforeJoinDayMonday, "[입사] ");
+    text += list;
     text += '님이 입사할 예정입니다. \n';
     text += '###### :love_letter: 환영의 마음을 가득담아 환영 쪽지를 남겨주세요! :love_letter:\n';
     text += '1. :memo: 에이프릴 자리에서 에비츄 포스트잇을 받아간다.\n';
@@ -238,8 +244,6 @@ function newCrewEvents(calendarId) {
       }
     ];
     
-    Logger.log(attachments);
-    
     // API 호출
     postMmost('', icon, 'WELCOME', attachments);
   }
@@ -251,19 +255,17 @@ function newCrewEvents(calendarId) {
  * @params seperator 파싱할 문구
  */
 function getText(events, seperator) {
-  let text = '';
+  let text = [];
   
   for (let i=0; i<events.length; i++) {
     let title = events[i].getTitle().split(seperator)[1];
     
-    if ((events.lenght === 1 && i === 0) || i === events.length - 1) {
-      text += title;
-    } else {
-      text += `${title}, `;
-    }
+    if (title === undefined) continue;
+    
+    text.push(title);
   }
   
-  return text;
+  return text.length > 1 ? text.join(", ") : text.join("");
 }
   
 /**
