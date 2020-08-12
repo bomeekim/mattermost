@@ -178,8 +178,12 @@ function newCrewEvents(calendarId) {
   // 입사하는 사람이 있는 경우
   // case1 당일
   if (!!theDay && theDay.length > 0) {
+    let list = getText(theDay, "[입사] ");
+    
+    if (!list) return;
+    
     let text = '#### [D-DAY] 오늘은 신규 크루 ';
-    text += getText(theDay, "[입사] ");
+    text += list;
     text += '님의 입사 첫날입니다.\n###### :tada: 입사를 진심으로 축하드립니다.:tada: @here 다들 격하게 환영해주세요!! :clap:';
     
     let img = "https://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif";
